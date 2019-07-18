@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/TylerBrock/colorjson"
 	"github.com/TylerBrock/saw/config"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
@@ -91,13 +90,12 @@ func (b *Blade) GetLogStreams() []*cloudwatchlogs.LogStream {
 
 // GetEvents gets events from AWS given the blade configuration
 func (b *Blade) GetEvents() {
-	formatter := b.output.Formatter()
 	input := b.config.FilterLogEventsInput()
 
 	handlePage := func(page *cloudwatchlogs.FilterLogEventsOutput, lastPage bool) bool {
 		for _, event := range page.Events {
 			if b.output.Pretty {
-				fmt.Println(formatEvent(formatter, event))
+				fmt.Println(formatEvent(b.output, event))
 			} else {
 				fmt.Println(*event.Message)
 			}
@@ -115,7 +113,6 @@ func (b *Blade) GetEvents() {
 func (b *Blade) StreamEvents() {
 	var lastSeenTime *int64
 	var seenEventIDs map[string]bool
-	formatter := b.output.Formatter()
 	input := b.config.FilterLogEventsInput()
 
 	clearSeenEventIds := func() {
@@ -141,7 +138,7 @@ func (b *Blade) StreamEvents() {
 				if b.output.Raw {
 					message = *event.Message
 				} else {
-					message = formatEvent(formatter, event)
+					message = formatEvent(b.output, event)
 				}
 				message = strings.TrimRight(message, "\n")
 				fmt.Println(message)
@@ -165,21 +162,33 @@ func (b *Blade) StreamEvents() {
 }
 
 // formatEvent returns a CloudWatch log event as a formatted string using the provided formatter
-func formatEvent(formatter *colorjson.Formatter, event *cloudwatchlogs.FilteredLogEvent) string {
+func formatEvent(outputConf *config.OutputConfiguration, event *cloudwatchlogs.FilteredLogEvent) string {
+	formatter := outputConf.Formatter()
+
 	red := color.New(color.FgRed).SprintFunc()
 	white := color.New(color.FgWhite).SprintFunc()
 
 	str := aws.StringValue(event.Message)
 	bytes := []byte(str)
-	date := aws.MillisecondsTimeValue(event.Timestamp)
-	dateStr := date.Format(time.RFC3339)
-	streamStr := aws.StringValue(event.LogStreamName)
 	jl := map[string]interface{}{}
 
+	datePrefix := ""
+	if !outputConf.HideDate {
+		date := aws.MillisecondsTimeValue(event.Timestamp)
+		dateStr := date.Format(time.RFC3339)
+		datePrefix = fmt.Sprintf("[%s] ", red(dateStr))
+	}
+
+	streamPrefix := ""
+	if !outputConf.HideStreamName {
+		streamStr := aws.StringValue(event.LogStreamName)
+		streamPrefix = fmt.Sprintf("(%s) ", white(streamStr))
+	}
+
 	if err := json.Unmarshal(bytes, &jl); err != nil {
-		return fmt.Sprintf("[%s] (%s) %s", red(dateStr), white(streamStr), str)
+		return fmt.Sprintf("%s%s%s", datePrefix, streamPrefix, str)
 	}
 
 	output, _ := formatter.Marshal(jl)
-	return fmt.Sprintf("[%s] (%s) %s", red(dateStr), white(streamStr), output)
+	return fmt.Sprintf("%s%s%s", datePrefix, streamPrefix, output)
 }

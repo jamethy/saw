@@ -47,4 +47,6 @@ func init() {
 	watchCommand.Flags().BoolVar(&watchOutputConfig.Expand, "expand", false, "indent JSON log messages")
 	watchCommand.Flags().BoolVar(&watchOutputConfig.Invert, "invert", false, "invert colors for light terminal themes")
 	watchCommand.Flags().BoolVar(&watchOutputConfig.RawString, "rawString", false, "print JSON strings without escaping")
+	watchCommand.Flags().BoolVar(&watchOutputConfig.HideDate, "hideDate", false, "Hides timestamp prefix")
+	watchCommand.Flags().BoolVar(&watchOutputConfig.HideStreamName, "hideStreamName", false, "Hides stream name prefix")
 }

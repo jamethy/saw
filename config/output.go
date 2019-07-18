@@ -6,12 +6,14 @@ import (
 )
 
 type OutputConfiguration struct {
-	Raw       bool
-	Pretty    bool
-	Expand    bool
-	Invert    bool
-	RawString bool
-	NoColor   bool
+	Raw              bool
+	Pretty           bool
+	Expand           bool
+	Invert           bool
+	RawString        bool
+	NoColor          bool
+	HideDate         bool
+	HideStreamName   bool
 }
 
 func (c *OutputConfiguration) Formatter() *colorjson.Formatter {
