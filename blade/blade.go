@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/TylerBrock/saw/config"
+	"github.com/jamethy/saw/config"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
 	"github.com/aws/aws-sdk-go/aws/session"
