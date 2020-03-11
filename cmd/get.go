@@ -35,7 +35,10 @@ var getCommand = &cobra.Command{
 			}
 			getConfig.Streams = streams
 		}
-		b.GetEvents()
+		lines := b.GetEvents()
+		for _, line := range lines {
+			fmt.Println(line)
+		}
 	},
 }
 

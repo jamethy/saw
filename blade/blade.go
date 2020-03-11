@@ -89,15 +89,16 @@ func (b *Blade) GetLogStreams() []*cloudwatchlogs.LogStream {
 }
 
 // GetEvents gets events from AWS given the blade configuration
-func (b *Blade) GetEvents() {
+func (b *Blade) GetEvents() []string {
 	input := b.config.FilterLogEventsInput()
 
+	var lines []string
 	handlePage := func(page *cloudwatchlogs.FilterLogEventsOutput, lastPage bool) bool {
 		for _, event := range page.Events {
 			if b.output.Pretty {
-				fmt.Println(formatEvent(b.output, event))
+				lines = append(lines, formatEvent(b.output, event))
 			} else {
-				fmt.Println(*event.Message)
+				lines = append(lines, *event.Message)
 			}
 		}
 		return !lastPage
@@ -107,6 +108,7 @@ func (b *Blade) GetEvents() {
 		fmt.Println("Error", err)
 		os.Exit(2)
 	}
+	return lines
 }
 
 // StreamEvents continuously prints log events to the console
